@@ -78,7 +78,7 @@ ARTICLE IDEA: [your article idea here]
 """
         
         try:
-            response = self.client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a creative content strategist who generates engaging social media posts and article ideas based on AI/tech research. Keep responses concise and actionable."},
@@ -87,8 +87,7 @@ ARTICLE IDEA: [your article idea here]
                 max_tokens=300,
                 temperature=0.7
             )
-            
-            content = response.choices[0].message.content.strip()
+            content = response['choices'][0]['message']['content'].strip()
             
             # Parse the response
             post_idea = ""

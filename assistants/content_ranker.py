@@ -67,16 +67,15 @@ class ContentRanker:
     
     def _get_embedding(self, text: str) -> List[float]:
         """Get OpenAI embedding for text"""
-        if not self.client:
-            self.logger.warning("OpenAI client not available")
+        if not OPENAI_API_KEY:
+            self.logger.warning("OpenAI API key not available")
             return []
-        
         try:
-            response = self.client.embeddings.create(
+            response = openai.Embedding.create(
                 model="text-embedding-ada-002",
                 input=text
             )
-            return response.data[0].embedding
+            return response['data'][0]['embedding']
         except Exception as e:
             self.logger.error(f"Error getting embedding: {e}")
             return []
