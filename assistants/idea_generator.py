@@ -5,7 +5,7 @@ Idea Generator - AI-powered content idea creation from research sources
 import logging
 import os
 from typing import List, Dict, Any
-from openai import OpenAI
+import openai
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 
@@ -15,7 +15,8 @@ class IdeaGenerator:
         
         self.client = None
         if openai_api_key:
-            self.client = OpenAI(api_key=openai_api_key)
+            openai.api_key = openai_api_key
+            self.client = openai
         else:
             self.logger.warning("No OpenAI API key provided")
     

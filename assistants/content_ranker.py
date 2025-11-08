@@ -5,7 +5,7 @@ Content Ranker - AI-powered content relevance scoring using embeddings
 import logging
 from typing import List, Dict, Any
 import os
-from openai import OpenAI
+import openai
 import numpy as np
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
@@ -23,7 +23,8 @@ class ContentRanker:
         
         self.client = None
         if openai_api_key:
-            self.client = OpenAI(api_key=openai_api_key)
+            openai.api_key = openai_api_key
+            self.client = openai
     
     def score_content_relevance(self, articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Score articles by embedding similarity to AI reference text"""
