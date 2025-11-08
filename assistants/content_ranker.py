@@ -5,7 +5,7 @@ Content Ranker - AI-powered content relevance scoring using embeddings
 import logging
 from typing import List, Dict, Any
 import os
-import openai
+from openai import OpenAI
 import numpy as np
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
@@ -23,8 +23,7 @@ class ContentRanker:
         
         self.client = None
         if openai_api_key:
-            openai.api_key = openai_api_key
-            self.client = openai
+            self.client = OpenAI(api_key=openai_api_key)
     
     def score_content_relevance(self, articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Score articles by embedding similarity to AI reference text"""
@@ -67,15 +66,16 @@ class ContentRanker:
     
     def _get_embedding(self, text: str) -> List[float]:
         """Get OpenAI embedding for text"""
-        if not OPENAI_API_KEY:
-            self.logger.warning("OpenAI API key not available")
+        if not self.client:
+            self.logger.warning("OpenAI client not available")
             return []
+        
         try:
-            response = openai.Embedding.create(
+            response = self.client.embeddings.create(
                 model="text-embedding-ada-002",
                 input=text
             )
-            return response['data'][0]['embedding']
+            return response.data[0].embedding
         except Exception as e:
             self.logger.error(f"Error getting embedding: {e}")
             return []

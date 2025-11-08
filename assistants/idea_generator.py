@@ -5,7 +5,7 @@ Idea Generator - AI-powered content idea creation from research sources
 import logging
 import os
 from typing import List, Dict, Any
-import openai
+from openai import OpenAI
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 
@@ -15,8 +15,7 @@ class IdeaGenerator:
         
         self.client = None
         if openai_api_key:
-            openai.api_key = openai_api_key
-            self.client = openai
+            self.client = OpenAI(api_key=openai_api_key)
         else:
             self.logger.warning("No OpenAI API key provided")
     
@@ -78,7 +77,7 @@ ARTICLE IDEA: [your article idea here]
 """
         
         try:
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a creative content strategist who generates engaging social media posts and article ideas based on AI/tech research. Keep responses concise and actionable."},
@@ -87,7 +86,7 @@ ARTICLE IDEA: [your article idea here]
                 max_tokens=300,
                 temperature=0.7
             )
-            content = response['choices'][0]['message']['content'].strip()
+            content = response.choices[0].message.content.strip()
             
             # Parse the response
             post_idea = ""
