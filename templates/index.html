@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tracker Dashboard</title>
+    <style>
+        /* Dark theme colors */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --accent: #bb86fc;
+            --accent-secondary: #03dac6;
+            --divider: #2d2d2d;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --error: #F44336;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--divider);
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(45deg, #bb86fc, #03dac6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-fill-color: transparent;
+        }
+        
+        .system-status {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            background-color: var(--card-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+        
+        .status-indicator.error {
+            background-color: var(--error);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background-color: #9370DB;
+            transform: translateY(-2px);
+        }
+        
+        .btn.secondary {
+            background-color: var(--accent-secondary);
+        }
+        
+        .btn:disabled {
+            background-color: var(--divider);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--divider);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .filter-btn.active {
+            background-color: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+        
+        .feed-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .topic-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .source-banner {
+            position: absolute;
+            top: 15px;
+            right: -35px;
+            padding: 5px 40px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            transform: rotate(45deg);
+            color: #000;
+            z-index: 10;
+        }
+        
+        .ranking-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--accent);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .importance-score {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background-color: rgba(187, 134, 252, 0.2);
+            color: var(--accent);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .topic-content {
+            padding: 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .topic-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--accent);
+            line-height: 1.3;
+        }
+        
+        .topic-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .meta-item {
+            background-color: rgba(176, 176, 176, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .topic-summary {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+        
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .keyword {
+            background-color: rgba(3, 218, 198, 0.2);
+            color: var(--accent-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+        
+        .idea-section {
+            margin-top: 15px;
+        }
+        
+        .idea-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+        
+        .idea-text {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            padding-left: 10px;
+            border-left: 2px solid var(--accent);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--divider);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .feed-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls, .filters {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9370DB;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AI Tracker Dashboard</h1>
+        <div class="system-status">
+            <div class="status-item">
+                <div class="status-indicator" id="system-status"></div>
+                <span>System Status</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="collection-status"></div>
+                <span>Last Collection: <span id="last-run">-</span></span>
+            </div>
+            <div class="status-item">
+                <span>Total Topics: <span id="topic-count">{{ topics|length }}</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn" onclick="runCollection()" id="collect-btn">🔄 Run Collection</button>
+        <button class="btn secondary" onclick="refreshDashboard()">📊 Refresh Dashboard</button>
+        <button class="btn" onclick="showAnalytics()">📈 View Analytics</button>
+    </div>
+    
+    <div class="filters">
+        <div class="filter-btn active" onclick="filterByCategory('all')">All</div>
+        <div class="filter-btn" onclick="filterByCategory('Research Paper')">Research</div>
+        <div class="filter-btn" onclick="filterByCategory('News Article')">News</div>
+        <div class="filter-btn" onclick="filterByCategory('Company Blog')">Company Blogs</div>
+        <div class="filter-btn" onclick="filterByCategory('Blog Post')">Blog Posts</div>
+    </div>
+    
+    <div class="feed-container" id="feed-container">
+        {% for topic in topics %}
+        <div class="topic-card" data-category="{{ topic.category }}">
+            <div class="source-banner" style="background-color: {{ topic.color }}">{{ topic.source }}</div>
+            {% if topic.rank %}
+            <div class="ranking-badge">#{{ topic.rank }}</div>
+            {% endif %}
+            {% if topic.importance_score %}
+            <div class="importance-score">{{ "%.3f"|format(topic.importance_score) }}</div>
+            {% endif %}
+            
+            <div class="topic-content">
+                <h2 class="topic-title">{{ topic.title }}</h2>
+                
+                <div class="topic-meta">
+                    {% if topic.published_date %}
+                    <div class="meta-item">📅 {{ topic.published_date[:10] }}</div>
+                    {% endif %}
+                    {% if topic.citation_count and topic.citation_count > 0 %}
+                    <div class="meta-item">📖 {{ topic.citation_count }} citations</div>
+                    {% endif %}
+                </div>
+                
+                {% if topic.keywords %}
+                <div class="keywords">
+                    {% for keyword in topic.keywords[:5] %}
+                    <span class="keyword">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <p class="topic-summary">{{ topic.summary }}</p>
+                
+                {% if topic.post_idea %}
+                <div class="idea-section">
+                    <div class="idea-label">Post Idea</div>
+                    <div class="idea-text">{{ topic.post_idea }}</div>
+                </div>
+                {% endif %}
+                
+                {% if topic.project_idea %}
+                <div class="idea-section">
+                    <div class="idea-label">Project Idea</div>
+                    <div class="idea-text">{{ topic.project_idea }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let currentCategory = 'all';
+        
+        // Load system status on page load
+        window.addEventListener('load', function() {
+            loadSystemStatus();
+            setInterval(loadSystemStatus, 30000); // Update every 30 seconds
+        });
+        
+        async function loadSystemStatus() {
+            try {
+                const response = await fetch('/api/system_status');
+                const status = await response.json();
+                
+                document.getElementById('system-status').className = 'status-indicator';
+                document.getElementById('collection-status').className = 'status-indicator';
+                
+                if (status.last_run) {
+                    const lastRun = new Date(status.last_run);
+                    document.getElementById('last-run').textContent = lastRun.toLocaleString();
+                } else {
+                    document.getElementById('last-run').textContent = 'Never';
+                }
+                
+                document.getElementById('topic-count').textContent = status.total_topics;
+                
+                if (status.is_running) {
+                    document.getElementById('system-status').classList.add('warning');
+                    document.getElementById('collect-btn').disabled = true;
+                    document.getElementById('collect-btn').textContent = '🔄 Running...';
+                } else {
+                    document.getElementById('collect-btn').disabled = false;
+                    document.getElementById('collect-btn').textContent = '🔄 Run Collection';
+                }
+                
+            } catch (error) {
+                console.error('Failed to load system status:', error);
+                document.getElementById('system-status').classList.add('error');
+            }
+        }
+        
+        async function runCollection() {
+            const btn = document.getElementById('collect-btn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Starting...';
+            
+            try {
+                const response = await fetch('/api/run_collection');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert(`Collection completed! ${result.items_processed} topics processed.`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert(`Collection failed: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                alert(`Error running collection: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Run Collection';
+            }
+        }
+        
+        function refreshDashboard() {
+            window.location.reload();
+        }
+        
+        async function showAnalytics() {
+            try {
+                const response = await fetch('/api/analytics?days=7');
+                const analytics = await response.json();
+                
+                let message = `Analytics (Last 7 Days):\n\n`;
+                message += `📊 Source Distribution:\n`;
+                for (const [source, count] of Object.entries(analytics.source_distribution)) {
+                    message += `  • ${source}: ${count}\n`;
+                }
+                message += `\n🔥 Top Keywords:\n`;
+                for (const [keyword, count] of analytics.top_keywords.slice(0, 5)) {
+                    message += `  • ${keyword}: ${count}\n`;
+                }
+                message += `\n⭐ Average Importance: ${analytics.avg_importance_score.toFixed(3)}`;
+                
+                alert(message);
+            } catch (error) {
+                alert('Failed to load analytics data');
+            }
+        }
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter cards
+            const cards = document.querySelectorAll('.topic-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            if (!document.getElementById('collect-btn').disabled) {
+                window.location.reload();
+            }
+        }, 300000);
+    </script>
+</body>
+</html>
