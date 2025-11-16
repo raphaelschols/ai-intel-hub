@@ -3,10 +3,9 @@ Simple Telegram Bot - Sends AI content summaries with weekly scheduling
 """
 import os
 import requests
-import schedule
-import time
 from datetime import datetime
-from pipeline.orchestrator import ContentPipeline
+
+content_engine_https = os.getenv("CONTENT_ENGINE_HTTPS")
 
 class TelegramBot:
     def __init__(self):
@@ -72,7 +71,7 @@ class TelegramBot:
             
             # Build message
         message = f"🤖 Daily AI Summary - {datetime.now().strftime('%B %d')}\n\n"
-        message += "Click here to read more articles: https://focusfeed.ai\n\nTop Articles:\n\n"
+        message += f"Click here to read more articles: {content_engine_https}\n\nTop Articles:\n\n"
 
         for i, article in enumerate(articles, start=1):
             title = article["title"]
