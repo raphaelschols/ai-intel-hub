@@ -1,6 +1,5 @@
 from flask import Flask, render_template, jsonify
 from pipeline.orchestrator import ContentPipeline
-from scheduler import run_weekly_summary
 import platform
 import json
 import os
@@ -490,10 +489,11 @@ def get_data():
     
 @app.route("/weekly-task", methods=["POST"])
 def weekly_task():
-    """Endpoint for Google Cloud Scheduler to trigger weekly summary"""
+    """Endpoint for Google Cloud Scheduler to trigger content generation and notification"""
     try:
-        run_weekly_summary()
-        return "Weekly task completed successfully", 200
+        pipeline = ContentPipeline()
+        pipeline.generate_content_and_notify()
+        return "Content generation and notification completed successfully", 200
     except Exception as e:
         print(f"Error in weekly task: {e}")
         return f"Error: {str(e)}", 500

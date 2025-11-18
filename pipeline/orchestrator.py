@@ -4,6 +4,8 @@ Main orchestrator that coordinates all collectors and intelligence components
 """
 
 import logging
+import json
+import os
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -12,6 +14,7 @@ from collectors.research_collector import ResearchCollector
 from collectors.rss_collector import RSSCollector
 from assistants.content_ranker import ContentRanker
 from assistants.idea_generator import IdeaGenerator
+from assistants.telegram_bot import TelegramBot
 
 class ContentPipeline:
     def __init__(self):
@@ -142,8 +145,42 @@ class ContentPipeline:
                 "status": "failed"
             }
     
-    # Legacy method for backward compatibility
-    def generate_ideas(self, top_n: int = 10) -> List[Dict[str, Any]]:
-        """Legacy method - returns flattened list of articles with ideas"""
-        results = self.run_complete_pipeline(top_n)
-        return results.get('content_ideas', [])
+    def generate_content_and_notify(self):
+        """Generate fresh content pipeline results and send notification via Telegram"""
+        try:
+            # Initialize telegram bot
+            bot = TelegramBot()
+            
+            # Generate fresh content
+            print("Running content pipeline...")
+            results = self.run_complete_pipeline()
+            
+            # Save results to file for web app to use
+            data_file = "data/latest_feed.json"
+            os.makedirs("data", exist_ok=True)
+            
+            feed_data = {
+                "last_updated": datetime.now().isoformat(),
+                "content_ideas": results.get('content_ideas', [])
+            }
+            
+            with open(data_file, 'w', encoding='utf-8') as f:
+                json.dump(feed_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"Results saved to {data_file}")
+
+            # Read articles from saved data
+            with open(data_file, 'r', encoding='utf-8') as f:
+                saved_data = json.load(f)
+                articles = saved_data.get('content_ideas', [])
+            
+            # Send notification
+            print("Sending content summary...")
+            bot.send_daily_summary(articles=articles)
+            
+            print("Content generation and notification completed successfully!")
+            
+        except Exception as e:
+            print(f"Error in content generation and notification: {e}")
+            self.logger.error(f"Error in content generation and notification: {e}")
+            raise
